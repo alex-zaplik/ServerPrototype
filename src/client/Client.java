@@ -69,7 +69,7 @@ public class Client {
 
     public static void clientMain(String[] args) {
         Model model = new Model(getInstance());
-        View view = new View(getInstance());
+        View view = new View();
 
         new Thread(view).start();
     }

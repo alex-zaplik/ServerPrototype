@@ -11,9 +11,9 @@ import java.util.Scanner;
 public class View implements Runnable {
 
     private boolean running = true;
-    private Client client;
+    //private Client client;
 
-    private Scanner scan;
+    private BufferedReader scan;
 
     private String[] messages = {
             "Starting the client...",                   // 0
@@ -26,25 +26,24 @@ public class View implements Runnable {
     };
 
 
-    View(Client client) {
-        this.client = client;
-        scan = new Scanner(System.in);
+    View() {
+        scan = new BufferedReader(new InputStreamReader(System.in));
     }
 
     @Override
     public void run() {
         System.out.println(messages[0]);
 
-        while (!client.isConnected()) {
+        while (!Client.getInstance().isConnected()) {
             try {
                 System.out.print(messages[1]);
-                String address = scan.nextLine();
+                String address = scan.readLine();
 
                 int port = -1;
                 while (port == -1) {
                     try {
                         System.out.print(messages[2]);
-                        port = scan.nextInt();
+                        port = Integer.parseInt(scan.readLine());
 
                         if (port < 0 || port > 1 << 16) {
                             port = -1;
@@ -52,20 +51,19 @@ public class View implements Runnable {
                         }
                     } catch (InputMismatchException e) {
                         System.out.println(messages[6]);
-                        scan.nextLine();
+                        scan.readLine();
                     }
                 }
 
                 System.out.println(messages[3]);
 
-                client.setSocket(new Socket(address, port));
-                client.setOut(new PrintWriter(client.getSocket().getOutputStream(), true));
-                client.setIn(new BufferedReader(new InputStreamReader(client.getSocket().getInputStream())));
+                Client.getInstance().setSocket(new Socket(address, port));
+                Client.getInstance().setOut(new PrintWriter(Client.getInstance().getSocket().getOutputStream(), true));
+                Client.getInstance().setIn(new BufferedReader(new InputStreamReader(Client.getInstance().getSocket().getInputStream())));
             } catch (IOException e) {
                 e.printStackTrace();
 
                 System.out.println(messages[5]);
-                scan.nextLine();
             }
         }
 
@@ -75,15 +73,16 @@ public class View implements Runnable {
             String output;
             String input;
 
-            System.out.print("> ");
-            output = scan.nextLine();
-
-            System.out.println("==> " + output);
-
             try {
-                client.getOut().println(output);
+                System.out.print("> ");
+                output = scan.readLine();
 
-                if ((input = client.getIn().readLine()) != null) {
+                System.out.println("==> " + output);
+
+                Client.getInstance().getOut().println(output);
+
+                input = Client.getInstance().getIn().readLine();
+                if (input != null) {
                     System.out.println(output);
                     System.out.println(input);
                 }

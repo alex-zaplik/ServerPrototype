@@ -3,7 +3,7 @@ import server.Server;
 
 public class Main {
 
-    private static final boolean isServer = false;
+    private static final boolean isServer = true;
 
     public static void main(String[] args) {
         if (isServer) {
