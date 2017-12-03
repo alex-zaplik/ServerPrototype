@@ -77,13 +77,10 @@ public class View implements Runnable {
                 System.out.print("> ");
                 output = scan.readLine();
 
-                System.out.println("==> " + output);
-
                 Client.getInstance().getOut().println(output);
 
                 input = Client.getInstance().getIn().readLine();
                 if (input != null) {
-                    System.out.println(output);
                     System.out.println(input);
                 }
             } catch (Exception e) {

@@ -15,19 +15,17 @@ public class Server {
         try {
             ServerSocket sSocket = new ServerSocket(4444);
             Socket socket = sSocket.accept();
-            PrintWriter out = new PrintWriter(socket.getOutputStream());
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             System.out.println("Connected with client!");
-
-            out.println("Connection acquired");
 
             String input;
 
             while ((input = in.readLine()) != null) {
                 System.out.println("Client's message: " + input);
 
-                for (int i = 0; i < 100; i++) out.println(input);
+                out.println(input);
             }
         } catch (IOException e) {
             e.printStackTrace();
