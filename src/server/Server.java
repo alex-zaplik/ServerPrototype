@@ -1,34 +1,52 @@
 package server;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 public class Server {
+
+    private ServerSocket sSocket;
+    private Party party;
+
+    private Runnable emptySocket = new Runnable() {
+        @Override
+        public void run() {
+            if (sSocket != null && party != null) {
+                while (true) {
+                    try {
+                        ConnectedUser user = new ConnectedUser(sSocket.accept());
+                        party.addUser(user);
+                        System.out.println("Connected with client!");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    };
+
+    private void init() {
+        // Wait for the first user
+        try {
+            sSocket = new ServerSocket(4444);
+            party = new Party(3);
+
+            ConnectedUser user = new ConnectedUser(sSocket.accept());
+            party.addUser(user);
+
+            System.out.println("Connected with client!");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Wait for more users
+        new Thread(emptySocket).start();
+    }
 
     public static void serverMain(String[] args) {
         System.out.println("Starting the server...");
 
-        try {
-            ServerSocket sSocket = new ServerSocket(4444);
-            Socket socket = sSocket.accept();
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-            System.out.println("Connected with client!");
-
-            String input;
-
-            while ((input = in.readLine()) != null) {
-                System.out.println("Client's message: " + input);
-
-                out.println(input);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        Server server = new Server();
+        server.init();
     }
 }
