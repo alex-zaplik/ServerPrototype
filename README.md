@@ -1,3 +1,3 @@
 # ServerPrototype
 
-Do cholery... Dlaczego to nie działa...
+Coś już nawet działa
