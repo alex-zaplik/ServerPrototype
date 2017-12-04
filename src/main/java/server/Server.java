@@ -1,5 +1,7 @@
 package server;
 
+import exceptions.FullPartyException;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -13,30 +15,42 @@ public class Server {
         public void run() {
             if (sSocket != null && party != null) {
                 while (true) {
+                    ConnectedUser user = null;
                     try {
-                        ConnectedUser user = new ConnectedUser(sSocket.accept());
+                        user = new ConnectedUser(sSocket.accept());
                         party.addUser(user);
+                        user.getOut().println("Added to party");
                         System.out.println("Connected with client!");
                     } catch (IOException e) {
                         e.printStackTrace();
+                    } catch (FullPartyException e) {
+                        user.getOut().println("Party was full");
                     }
                 }
             }
         }
     };
 
+    private void createParty() {
+
+    }
+
     private void init() {
         // Wait for the first user
+        ConnectedUser user = null;
         try {
             sSocket = new ServerSocket(4444);
             party = new Party(3);
 
-            ConnectedUser user = new ConnectedUser(sSocket.accept());
+            user = new ConnectedUser(sSocket.accept());
             party.addUser(user);
 
+            user.getOut().println("Added to party");
             System.out.println("Connected with client!");
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (FullPartyException e) {
+            user.getOut().println("Party was full");
         }
 
         // Wait for more users

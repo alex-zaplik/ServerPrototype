@@ -1,5 +1,7 @@
 package server;
 
+import exceptions.FullPartyException;
+
 public class Party implements Runnable {
 
     private final int maxUsers;
@@ -13,18 +15,18 @@ public class Party implements Runnable {
         freeSlots = maxUsers;
     }
 
-    public synchronized void addUser(ConnectedUser user) {
+    public synchronized void addUser(ConnectedUser user) throws FullPartyException {
         if (freeSlots > 0) {
             for (int i = 0; i < maxUsers; i++) {
                 if (users[i] == null) {
                     users[i] = user;
                     freeSlots--;
-                    break;
+                    return;
                 }
             }
         }
 
-        // TODO: Throw an exception if party was free
+        throw new FullPartyException();
     }
 
     public synchronized void removeUser(ConnectedUser user) {
