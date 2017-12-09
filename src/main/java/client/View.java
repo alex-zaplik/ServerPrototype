@@ -6,7 +6,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.InputMismatchException;
-import java.util.Scanner;
 
 public class View implements Runnable {
 
@@ -60,6 +59,11 @@ public class View implements Runnable {
                 Client.getInstance().setSocket(new Socket(address, port));
                 Client.getInstance().setOut(new PrintWriter(Client.getInstance().getSocket().getOutputStream(), true));
                 Client.getInstance().setIn(new BufferedReader(new InputStreamReader(Client.getInstance().getSocket().getInputStream())));
+
+                String response = Client.getInstance().getIn().readLine();
+                if (response != null)
+                    System.out.println(response);
+
             } catch (IOException e) {
                 e.printStackTrace();
 
