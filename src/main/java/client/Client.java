@@ -1,5 +1,10 @@
 package client;
 
+import message.builder.IMessageBuilder;
+import message.builder.JSONMessageBuilder;
+import message.parser.IMessageParser;
+import message.parser.JSONMessageParser;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -13,6 +18,9 @@ public class Client {
     private PrintWriter out = null;
     private BufferedReader in = null;
 
+    private IMessageParser parser;
+    private IMessageBuilder builder;
+
     private View view;
     private Model model;
 
@@ -21,6 +29,7 @@ public class Client {
             synchronized (Client.class) {
                 if (instance == null) {
                     instance = new Client();
+                    instance.init();
                 }
             }
         }
@@ -52,6 +61,14 @@ public class Client {
         this.in = in;
     }
 
+    public IMessageParser getParser() {
+        return parser;
+    }
+
+    public IMessageBuilder getBuilder() {
+        return builder;
+    }
+
     public void disconnect() {
         try {
             out.close();
@@ -74,11 +91,13 @@ public class Client {
         model = new Model(getInstance());
         view = new View();
 
+        parser = new JSONMessageParser();
+        builder = new JSONMessageBuilder();
+
         new Thread(view).start();
     }
 
     public static void clientMain(String[] args) {
-        Client client = new Client();
-        client.init();
+        getInstance();
     }
 }

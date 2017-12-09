@@ -2,14 +2,18 @@ package server;
 
 import exceptions.FullPartyException;
 
+import java.io.IOException;
+
 public class Party implements Runnable {
 
     private final int maxUsers;
     private ConnectedUser[] users;
     private int freeSlots;
+    private String name;
 
-    public Party(int maxUsers) {
+    public Party(int maxUsers, String name) {
         this.maxUsers = maxUsers;
+        this.name = name;
 
         users = new ConnectedUser[maxUsers];
         freeSlots = maxUsers;
@@ -39,8 +43,42 @@ public class Party implements Runnable {
         }
     }
 
+    public int getMaxUsers() {
+        return maxUsers;
+    }
+
+    public int getFreeSlots() {
+        return freeSlots;
+    }
+
+    public String getName() {
+        return name;
+    }
+
     @Override
     public void run() {
-        // TODO: Do stuff here
+        // TODO: This is just a ping pong conversation
+        while (true) {
+            for (ConnectedUser user : users) {
+                if (user == null)
+                    continue;
+
+                try {
+                    if (!user.getIn().ready())
+                        continue;
+
+                    String msg = user.getIn().readLine();
+                    if (msg != null)
+                        for (ConnectedUser u : users) {
+                            if (u == null)
+                                continue;
+
+                            u.getOut().println(name + "|" + user.getID() + ": " + msg);
+                        }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

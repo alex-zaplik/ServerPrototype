@@ -5,7 +5,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class JSONMessageParser implements IMessagePraser {
+public class JSONMessageParser implements IMessageParser {
 
 	/**
 	 * Returns a {@link Map}, where the key is the property name

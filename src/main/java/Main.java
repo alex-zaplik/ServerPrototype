@@ -3,11 +3,16 @@ import server.Server;
 
 public class Main {
 
-    private static final boolean isServer = false;
+    private static final boolean isSimultaneous = false;
+
+    private static void simultaneous(String[] args) {
+        new Thread(() -> Server.serverMain(args)).start();
+        new Thread(() -> Client.clientMain(args)).start();
+    }
 
     public static void main(String[] args) {
-        if (isServer) {
-            Server.serverMain(args);
+        if (isSimultaneous) {
+            simultaneous(args);
         } else {
             Client.clientMain(args);
         }

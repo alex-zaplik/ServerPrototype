@@ -11,9 +11,11 @@ public class ConnectedUser {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
+    private int ID;
 
-    public ConnectedUser(Socket socket) throws IOException {
+    public ConnectedUser(Socket socket, int ID) throws IOException {
         this.socket = socket;
+        this.ID = ID;
 
         out = new PrintWriter(socket.getOutputStream(), true);
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -29,5 +31,9 @@ public class ConnectedUser {
 
     public BufferedReader getIn() {
         return in;
+    }
+
+    public int getID() {
+        return ID;
     }
 }

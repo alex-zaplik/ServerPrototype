@@ -2,7 +2,7 @@ package message.parser;
 
 import java.util.Map;
 
-public interface IMessagePraser {
+public interface IMessageParser {
 
 	/**
 	 * Returns a {@link Map}, where the key is the property name

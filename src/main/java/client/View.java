@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.InputMismatchException;
+import java.util.Map;
 
 public class View implements Runnable {
 
@@ -60,10 +61,59 @@ public class View implements Runnable {
                 Client.getInstance().setOut(new PrintWriter(Client.getInstance().getSocket().getOutputStream(), true));
                 Client.getInstance().setIn(new BufferedReader(new InputStreamReader(Client.getInstance().getSocket().getInputStream())));
 
-                String response = Client.getInstance().getIn().readLine();
-                if (response != null)
-                    System.out.println(response);
+                System.out.println(messages[4]);
 
+                String response = Client.getInstance().getIn().readLine();
+                if (response != null) {
+                    Map<String, Object> responseMap = Client.getInstance().getParser().parse(response);
+
+                    if (!responseMap.containsKey("s_msg")) {
+                        for (int i = (int) responseMap.get("i_size") - 1; i >= 0; i--) {
+                            System.out.println(responseMap.get("s_name") + " [" + responseMap.get("i_left") + "/" + responseMap.get("i_max") + "]");
+
+                            if (i > 0)
+                                response = Client.getInstance().getIn().readLine();
+
+                            if (response == null) {
+                                System.out.println("Something went wrong...");
+                                break;
+                            }
+
+                            responseMap = Client.getInstance().getParser().parse(response);
+                        }
+                    } else {
+                        System.out.println(responseMap.get("s_msg"));
+                    }
+                }
+
+                System.out.print("> ");
+                String command = scan.readLine();
+                if (command.charAt(0) == 'c') {
+                    // Creating a new party. command = c <name> <max>
+                    String[] settings = command.split(" ");
+
+                    // TODO: Handle wrong input
+                    String name = settings[1];
+                    int max = Integer.parseInt(settings[2]);
+
+                    Client.getInstance().getOut().println(
+                            Client.getInstance().getBuilder()
+                            .put("i_action", 0)
+                            .put("s_name", name)
+                            .put("i_max", max)
+                            .get()
+                    );
+                } else {
+                    // Joining party named 'command'
+
+                    // TODO: Handle wrong input
+                    Client.getInstance().getOut().println(
+                            Client.getInstance().getBuilder()
+                                    .put("i_action", 1)
+                                    .put("s_name", command)
+                                    .get()
+                    );
+                }
             } catch (IOException e) {
                 e.printStackTrace();
 
@@ -71,22 +121,31 @@ public class View implements Runnable {
             }
         }
 
-        System.out.println(messages[4]);
+        // TODO: This is just a ping pong conversation
+        new Thread(() -> {
+            String input;
+
+            while (true) {
+                try {
+                    input = Client.getInstance().getIn().readLine();
+
+                    if (input != null) {
+                        System.out.println(input);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
 
         while (running) {
             String output;
-            String input;
 
             try {
                 System.out.print("> ");
                 output = scan.readLine();
 
                 Client.getInstance().getOut().println(output);
-
-                input = Client.getInstance().getIn().readLine();
-                if (input != null) {
-                    System.out.println(input);
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

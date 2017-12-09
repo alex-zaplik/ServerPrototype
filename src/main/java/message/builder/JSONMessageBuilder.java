@@ -1,6 +1,5 @@
-package builder;
+package message.builder;
 
-import message.builder.IMessageBuilder;
 import org.json.JSONObject;
 
 public class JSONMessageBuilder implements IMessageBuilder {
