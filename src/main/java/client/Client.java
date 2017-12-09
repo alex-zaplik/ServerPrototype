@@ -13,6 +13,9 @@ public class Client {
     private PrintWriter out = null;
     private BufferedReader in = null;
 
+    private View view;
+    private Model model;
+
     public static Client getInstance() {
         if (instance == null) {
             synchronized (Client.class) {
@@ -67,10 +70,15 @@ public class Client {
         return socket != null && out != null && in != null;
     }
 
-    public static void clientMain(String[] args) {
-        Model model = new Model(getInstance());
-        View view = new View();
+    public void init() {
+        model = new Model(getInstance());
+        view = new View();
 
         new Thread(view).start();
+    }
+
+    public static void clientMain(String[] args) {
+        Client client = new Client();
+        client.init();
     }
 }
