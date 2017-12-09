@@ -3,18 +3,22 @@ import server.Server;
 
 public class Main {
 
-    private static final boolean isSimultaneous = false;
+    // TODO: Handle client disconnecting from the server (both on the server's and client's side)
+    // TODO: Leaving one party and joining a different one
+    // TODO: Closing a party when the last user leaves
 
-    private static void simultaneous(String[] args) {
-        new Thread(() -> Server.serverMain(args)).start();
-        new Thread(() -> Client.clientMain(args)).start();
+    private static final boolean isSimultaneous = true;
+
+    private static void simultaneous() {
+        new Thread(Server::main).start();
+        new Thread(Client::main).start();
     }
 
     public static void main(String[] args) {
         if (isSimultaneous) {
-            simultaneous(args);
+            simultaneous();
         } else {
-            Client.clientMain(args);
+            Client.main();
         }
     }
 }

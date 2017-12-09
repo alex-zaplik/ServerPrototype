@@ -4,14 +4,37 @@ import exceptions.FullPartyException;
 
 import java.io.IOException;
 
+/**
+ * The class representing a Party, that is, a group of users that can communicate/play with each other
+ *
+ * @author Aleksander Lasecki
+ */
 public class Party implements Runnable {
 
+    /**
+     * Maximum number of users connected to the Party
+     */
     private final int maxUsers;
+    /**
+     * Array containing all connected users (null if a slot is empty)
+     */
     private ConnectedUser[] users;
+    /**
+     * Number of free slots in the Party
+     */
     private int freeSlots;
+    /**
+     * Name of the Party
+     */
     private String name;
 
-    public Party(int maxUsers, String name) {
+    /**
+     * Class constructor
+     *
+     * @param maxUsers  Maximum number of users connected to the Party
+     * @param name      Name of the Party
+     */
+    Party(int maxUsers, String name) {
         this.maxUsers = maxUsers;
         this.name = name;
 
@@ -19,7 +42,13 @@ public class Party implements Runnable {
         freeSlots = maxUsers;
     }
 
-    public synchronized void addUser(ConnectedUser user) throws FullPartyException {
+    /**
+     * Adds the specified user to the Party
+     *
+     * @param user                  The user to be added
+     * @throws FullPartyException   Thrown if the Party was already full
+     */
+    synchronized void addUser(ConnectedUser user) throws FullPartyException {
         if (freeSlots > 0) {
             for (int i = 0; i < maxUsers; i++) {
                 if (users[i] == null) {
@@ -33,7 +62,12 @@ public class Party implements Runnable {
         throw new FullPartyException();
     }
 
-    public synchronized void removeUser(ConnectedUser user) {
+    /**
+     * Removes the specified user from the party
+     *
+     * @param user  The user to be removed
+     */
+    synchronized void removeUser(ConnectedUser user) {
         for (int i = 0; i < maxUsers; i++) {
             if (users[i].equals(user)) {
                 users[i] = null;
@@ -43,18 +77,36 @@ public class Party implements Runnable {
         }
     }
 
-    public int getMaxUsers() {
+    /**
+     * Returns the maximum number of users connected to the Party
+     *
+     * @return  Maximum number of users connected to the Party
+     */
+    int getMaxUsers() {
         return maxUsers;
     }
 
-    public int getFreeSlots() {
+    /**
+     * Returns the number of free slots in the Party
+     *
+     * @return  Number of free slots in the Party
+     */
+    int getFreeSlots() {
         return freeSlots;
     }
 
-    public String getName() {
+    /**
+     * Returns the name of the Party
+     *
+     * @return  Name of the Party
+     */
+    String getName() {
         return name;
     }
 
+    /**
+     * Simple chat implementation
+     */
     @Override
     public void run() {
         // TODO: This is just a ping pong conversation
