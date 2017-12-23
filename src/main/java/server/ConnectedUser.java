@@ -42,6 +42,31 @@ class ConnectedUser {
         in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
     }
 
+    // TODO: Document
+    public void sendMessage(String msg) {
+        getOut().println(msg);
+    }
+
+    // TODO: Document
+    // timeout = -1 == infinite wait
+    // timeout = -2 == instant
+    public String receiveMessage(long timeout) throws IOException {
+        String msg;
+
+        long t = System.currentTimeMillis() + timeout;
+        while (timeout != -2 && !getIn().ready()) {
+            if (timeout != -1 && System.currentTimeMillis() > t)
+                throw new IOException("Wait timeout");
+        }
+
+        msg = in.readLine();
+        if (timeout == -2 || msg != null) {
+            return msg;
+        } else {
+            throw new IOException("Unable to receive message. The socket might be closed");
+        }
+    }
+
     /**
      * Returns the user's PrintWriter
      *

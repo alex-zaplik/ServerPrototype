@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.InputMismatchException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Simple view that uses the console from communicating with users
@@ -30,6 +31,9 @@ public class View implements Runnable {
             "Connection failed",                        // 5
             "Invalid input given"                       // 6
     };
+
+    private volatile boolean myMove = false;
+    private volatile boolean gameStarted = false;
 
     /**
      * Class construction that initialized the BufferedReader
@@ -100,7 +104,20 @@ public class View implements Runnable {
      * @param input The input
      */
     void handleInput(String input) {
-        System.out.print(input + "\n> ");
+        // TODO: System.out.print("> " + input + "\n> ");
+
+        if (input != null) {
+            Map<String, Object> response = Client.getInstance().parser.parse(input);
+
+            if (response.containsKey("s_move")) {
+                myMove = true;
+            }
+
+            // TODO: What?
+            if (response.containsKey("s_game")) {
+                Client.getInstance().sendMessage(Client.getInstance().builder.put("b_done", true).get());
+            }
+        }
     }
 
     /**
@@ -115,10 +132,27 @@ public class View implements Runnable {
                 System.out.print("> ");
                 output = scan.readLine();
 
-                if (output.equals("exit"))
+                String[] command = output.split(" ");
+
+                if (command[0].equals("exit")) {
                     running = false;
-                else
-                    Client.getInstance().sendMessage(output);
+                } else if (command[0].equals("start")) {
+                    Client.getInstance().startGame();
+                } else if (command[0].equals("skip")) {
+                    Client.getInstance().skipMove();
+                } else if (command[0].equals("m") && command.length == 5) {
+                    if (!myMove) {
+                        System.out.println("It's not you move");
+                    }
+                    myMove = false;
+
+                    int fx = Integer.parseInt(command[1]);
+                    int fy = Integer.parseInt(command[2]);
+                    int tx = Integer.parseInt(command[3]);
+                    int ty = Integer.parseInt(command[4]);
+
+                    Client.getInstance().sendMove(fx, fy, tx, ty);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

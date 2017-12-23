@@ -1,8 +1,13 @@
 package server;
 
 import exceptions.FullPartyException;
+import game.GameManager;
+import game.GameType;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The class representing a Party, that is, a group of users that can communicate/play with each other
@@ -28,18 +33,30 @@ public class Party implements Runnable {
      */
     private String name;
 
+    private boolean joinable = false;
+
+    private GameManager manager;
+
     /**
      * Class constructor
      *
      * @param maxUsers  Maximum number of users connected to the Party
      * @param name      Name of the Party
      */
-    Party(int maxUsers, String name) {
+    Party(int maxUsers, String name, GameType type) {
         this.maxUsers = maxUsers;
         this.name = name;
 
         users = new ConnectedUser[maxUsers];
         freeSlots = maxUsers;
+
+        // TODO: Dummy switch
+        switch (type) {
+            case TEST_GAME:
+                manager = new GameManager();
+        }
+
+        joinable = true;
     }
 
     /**
@@ -77,6 +94,10 @@ public class Party implements Runnable {
         }
     }
 
+    public boolean isJoinable() {
+        return joinable;
+    }
+
     /**
      * Returns the maximum number of users connected to the Party
      *
@@ -104,33 +125,100 @@ public class Party implements Runnable {
         return name;
     }
 
-    /**
-     * Simple chat implementation
-     */
-    @Override
-    public void run() {
-        // TODO: This is just a ping pong conversation
-        while (true) {
+    private void initLoop() {
+        boolean gameStarted = false;
+        while (!gameStarted) {
             for (ConnectedUser user : users) {
                 if (user == null)
                     continue;
 
                 try {
-                    if (!user.getIn().ready())
-                        continue;
+                    Map<String, Object> response = Server.parser.parse(user.receiveMessage(-2));
+                    if (response != null && response.containsKey("s_start")) {
+                        gameStarted = true;
+                        break;
+                    }
 
-                    String msg = user.getIn().readLine();
-                    if (msg != null)
-                        for (ConnectedUser u : users) {
-                            if (u == null)
-                                continue;
-
-                            u.getOut().println(name + "|" + user.getID() + ": " + msg);
-                        }
                 } catch (IOException e) {
+                    // TODO: Someone might have disconnected
                     e.printStackTrace();
                 }
             }
         }
+
+        joinable = false;
+
+        List<Integer> userIDs = new ArrayList<>();
+        for (int u = 0; u < users.length; u++) {
+            if (users[u] == null)
+                continue;
+
+            userIDs.add(users[u].getID());
+        }
+        manager.init(userIDs);
+
+        for (int u = 0; u < users.length; u++) {
+            if (users[u] == null)
+                continue;
+
+            try {
+                users[u].sendMessage(Server.builder.put("s_game", "Test").put("i_pcount", manager.getPlayerCount()).get());
+
+                Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-1));
+                boolean done = (boolean) response.get("b_done");
+
+                if (!done) u--;
+            } catch (IOException e) {
+                // TODO: Unable to reach one of the players
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void gameLoop() {
+        // TODO: Check if someone won in the condition here
+        while (true) {
+            for (int u = 0; u < users.length; u++) {
+                if (users[u] == null)
+                    continue;
+
+                try {
+                    users[u].sendMessage(Server.builder
+                            .put("s_move", "Your move")
+                            .get());
+
+                    Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-1));
+                    int action = (int) response.get("i_action");
+
+                    switch (action) {
+                        case 0:
+                            boolean done = manager.makeMove(users[u].getID(),
+                                    (int) response.get("i_fx"), (int) response.get("i_fy"), (int) response.get("i_tx"), (int) response.get("i_ty"));
+
+                            if (!done) u--;
+
+                            break;
+                        case 1:
+                            // Skipping a move
+                            break;
+                    }
+
+                } catch (IOException e) {
+                    // TODO: Someone might have disconnected
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * Simple chat implementation
+     */
+    @Override
+    public void run() {
+        initLoop();
+        gameLoop();
+
+        // TODO: Handle party ending
     }
 }

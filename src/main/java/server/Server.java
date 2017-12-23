@@ -2,6 +2,7 @@ package server;
 
 import exceptions.CreatingPartyFailedException;
 import exceptions.FullPartyException;
+import game.GameType;
 import message.builder.IMessageBuilder;
 import message.builder.JSONMessageBuilder;
 import message.parser.IMessageParser;
@@ -35,11 +36,11 @@ public class Server {
     /**
      * Used to parse received messages
      */
-    private IMessageParser parser;
+    public static final IMessageParser parser = new JSONMessageParser();
     /**
      * Used to build messages that are to be sent throw a socket
      */
-    private IMessageBuilder builder;
+    public static final IMessageBuilder builder = new JSONMessageBuilder();
 
     /**
      * The ID of the last user that connected to the server
@@ -136,10 +137,17 @@ public class Server {
             );
         }
 
+        int size = 0;
+        for (int i = 0; i < parties.size(); i++) {
+            if (parties.get(i).isJoinable()) size++;
+        }
+
         for (int i = parties.size() - 1; i >= 0; i--) {
+            if (!parties.get(i).isJoinable())
+                continue;
 
             user.getOut().println(
-                    builder.put("i_size", parties.size())
+                    builder.put("i_size", size)
                     .put("s_name", parties.get(i).getName())
                     .put("i_max", parties.get(i).getMaxUsers())
                     .put("i_left", parties.get(i).getFreeSlots())
@@ -165,7 +173,7 @@ public class Server {
             if (p.getName().equals(name))
                 throw new CreatingPartyFailedException();
 
-        party = new Party(max, name);
+        party = new Party(max, name, GameType.TEST_GAME);
         parties.add(party);
         new Thread(party).start();
 
@@ -198,16 +206,13 @@ public class Server {
      * Initializing the server
      */
     private void init() {
-        parser = new JSONMessageParser();
-        builder = new JSONMessageBuilder();
-
         parties = new ArrayList<>();
 
         // TODO: Remove testing parties
-        Party p1 = new Party(10,"Test1");
+        Party p1 = new Party(10,"Test1", GameType.TEST_GAME);
         parties.add(p1);
         new Thread(p1).start();
-        Party p2 = new Party(15,"Test2");
+        Party p2 = new Party(15,"Test2", GameType.TEST_GAME);
         parties.add(p2);
         new Thread(p2).start();
 

@@ -39,14 +39,15 @@ public class Client {
      */
     private BufferedReader in = null;
 
+    // TODO: public is bad
     /**
      * Used to parse received messages
      */
-    private IMessageParser parser;
+    public IMessageParser parser;
     /**
      * Used to build messages that are to be sent throw a socket
      */
-    private IMessageBuilder builder;
+    public IMessageBuilder builder;
 
     /**
      * Reference to the view
@@ -78,6 +79,18 @@ public class Client {
      */
     void startListening() {
         inputListener.start();
+    }
+
+    void startGame() {
+        getOut().println(builder.put("s_start", "StartGame").get());
+    }
+
+    void sendMove(int fx, int fy, int tx, int ty) {
+        getOut().println(builder.put("i_action", 0).put("i_fx", fx).put("i_fy", fy).put("i_tx", tx).put("i_ty", ty).get());
+    }
+
+    void skipMove() {
+        getOut().println(builder.put("i_action", 1).get());
     }
 
     /**
