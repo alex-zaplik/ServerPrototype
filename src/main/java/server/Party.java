@@ -71,6 +71,9 @@ public class Party implements Runnable {
                 if (users[i] == null) {
                     users[i] = user;
                     freeSlots--;
+
+                    System.out.println("User with ID=" + user.getID() + " has joined " + name);
+
                     return;
                 }
             }
@@ -176,17 +179,20 @@ public class Party implements Runnable {
     }
 
     private void gameLoop() {
-        // TODO: Check if someone won in the condition here
+        // TODO: Check if someone won in this condition here
         while (true) {
             for (int u = 0; u < users.length; u++) {
                 if (users[u] == null)
                     continue;
 
                 try {
+                    // TODO: Clear the buffer here in case someone sent something when they weren't supposed to
+
                     users[u].sendMessage(Server.builder
                             .put("s_move", "Your move")
                             .get());
 
+                    // TODO: Possible null
                     Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-1));
                     int action = (int) response.get("i_action");
 

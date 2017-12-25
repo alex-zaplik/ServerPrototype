@@ -175,7 +175,7 @@ public class Server {
 
         party = new Party(max, name, GameType.TEST_GAME);
         parties.add(party);
-        new Thread(party).start();
+        new Thread(party, "Thread-" + party.getName()).start();
 
         return party;
     }

@@ -6,8 +6,9 @@ public class Main {
     // TODO: Handle client disconnecting from the server (both on the server's and client's side)
     // TODO: Leaving one party and joining a different one
     // TODO: Closing a party when the last user leaves
+    // TODO: Shadowing started parties
 
-    private static final boolean isSimultaneous = true;
+    private static final boolean isSimultaneous = false;
 
     private static void simultaneous() {
         new Thread(Server::main).start();
@@ -18,7 +19,8 @@ public class Main {
         if (isSimultaneous) {
             simultaneous();
         } else {
-            Client.main();
+            //Client.main();
+            Server.main();
         }
     }
 }
