@@ -5,8 +5,8 @@ public class Main {
 
     // TODO: Handle client disconnecting from the server (both on the server's and client's side)
     // TODO: Leaving one party and joining a different one
-    // TODO: Closing a party when the last user leaves
     // TODO: Shadowing started parties
+    // TODO: Trying again (joining a party)
 
     private static final boolean isSimultaneous = false;
 

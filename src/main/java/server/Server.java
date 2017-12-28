@@ -60,9 +60,17 @@ public class Server {
                         user = new ConnectedUser(sSocket.accept(), getID());
                         new Thread(() -> {
                             try {
+                                System.out.println("User " + user.getID() + " connected");
                                 setUpConnection(user);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            } catch (Exception e) {
+                                System.out.println("Disconnecting " + user.getID() + "...");
+
+                                try {
+                                    user.getIn().close();
+                                } catch (IOException e1) {
+                                    System.err.println("Unable to disconnect client...");
+                                }
+                                user.getOut().close();
                             }
                         }).start();
                     } catch (IOException e) {
@@ -94,34 +102,39 @@ public class Server {
 
         if (response != null) {
             Map<String, Object> responseMap = parser.parse(response);
-            int action = (int) responseMap.get("i_action");
 
-            switch (action) {
-                case 0:
-                    try {
-                        Party p = createParty(responseMap);
+            if (responseMap.containsKey("i_action")) {
+                int action = (int) responseMap.get("i_action");
 
-                        if (p == null)
-                            throw new CreatingPartyFailedException();
+                switch (action) {
+                    case 0:
+                        try {
+                            Party p = createParty(responseMap);
 
-                        p.addUser(user);
-                    } catch (CreatingPartyFailedException | FullPartyException e) {
-                        // TODO: Try again
-                        e.printStackTrace();
-                    }
-                    break;
-                case 1:
-                    try {
-                        joinParty(user, responseMap);
-                    } catch (FullPartyException e) {
-                        // TODO: Try again
-                        e.printStackTrace();
-                    }
-                    break;
-                default:
-                    throw new IOException("Unsupported action");
+                            if (p == null)
+                                throw new CreatingPartyFailedException();
+
+                            p.addUser(user);
+
+                            user.sendMessage(builder.put("s_joined", p.getName()).get());
+                        } catch (CreatingPartyFailedException | FullPartyException ignored) {
+                        }
+                        break;
+                    case 1:
+                        try {
+                            joinParty(user, responseMap);
+                        } catch (FullPartyException ignored) {
+                        }
+                        break;
+                    default:
+                        throw new IOException("Unsupported action");
+                }
             }
+
+            return;
         }
+
+        else throw new NullPointerException();
     }
 
     /**
@@ -197,6 +210,8 @@ public class Server {
 
         if (party != null) {
             party.addUser(user);
+
+            user.sendMessage(builder.put("s_joined", party.getName()).get());
         } else {
             throw new FullPartyException();
         }
@@ -209,12 +224,12 @@ public class Server {
         parties = new ArrayList<>();
 
         // TODO: Remove testing parties
-        Party p1 = new Party(10,"Test1", GameType.TEST_GAME);
+        Party p1 = new Party(2,"Test1", GameType.TEST_GAME);
         parties.add(p1);
         new Thread(p1).start();
-        Party p2 = new Party(15,"Test2", GameType.TEST_GAME);
-        parties.add(p2);
-        new Thread(p2).start();
+//        Party p2 = new Party(15,"Test2", GameType.TEST_GAME);
+//        parties.add(p2);
+//        new Thread(p2).start();
 
         try {
             sSocket = new ServerSocket(4444);

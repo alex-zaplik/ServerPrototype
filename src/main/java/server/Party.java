@@ -88,6 +88,8 @@ public class Party implements Runnable {
      * @param user  The user to be removed
      */
     synchronized void removeUser(ConnectedUser user) {
+        // TODO: There might be a bug here
+
         for (int i = 0; i < maxUsers; i++) {
             if (users[i].equals(user)) {
                 users[i] = null;
@@ -129,6 +131,8 @@ public class Party implements Runnable {
     }
 
     private void initLoop() {
+        // TODO: Closing a party when the last user leaves
+
         boolean gameStarted = false;
         while (!gameStarted) {
             for (ConnectedUser user : users) {
@@ -142,9 +146,20 @@ public class Party implements Runnable {
                         break;
                     }
 
+                    if (response == null)
+                        throw new IOException();
+
                 } catch (IOException e) {
-                    // TODO: Someone might have disconnected
-                    e.printStackTrace();
+                    System.out.println("Disconnecting " + user.getID() + "...");
+                    removeUser(user);
+
+                    try {
+                        user.getIn().close();
+                    } catch (IOException e1) {
+                        System.err.println("Unable to close client's socket...");
+                    }
+
+                    user.getOut().close();
                 }
             }
         }
@@ -164,18 +179,44 @@ public class Party implements Runnable {
             if (users[u] == null)
                 continue;
 
-            try {
-                users[u].sendMessage(Server.builder.put("s_game", "Test").put("i_pcount", manager.getPlayerCount()).get());
+            users[u].sendMessage(Server.builder.put("s_game", "Test").put("i_pcount", manager.getPlayerCount()).get());
+        }
 
-                Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-1));
-                boolean done = (boolean) response.get("b_done");
+        boolean allDone = false;
+        while (!allDone) {
 
-                if (!done) u--;
-            } catch (IOException e) {
-                // TODO: Unable to reach one of the players
-                e.printStackTrace();
+            allDone = true;
+
+            for (int u = 0; u < users.length; u++) {
+                if (users[u] == null)
+                    continue;
+
+                try {
+                    Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-2));
+
+                    if (response == null)
+                        throw new IOException();
+
+                    users[u].setDoneSetUp(response.containsKey("b_done") && (boolean) response.get("b_done"));
+                    if (!users[u].isDoneSetUp()) allDone = false;
+
+                } catch (IOException e) {
+                    endParty();
+
+                    System.out.println("Disconnecting " + users[u].getID() + "...");
+                    try {
+                        users[u].getIn().close();
+                    } catch (IOException e1) {
+                        System.err.println("Unable to close client's socket...");
+                    }
+                    users[u].getOut().close();
+
+                    removeUser(users[u]);
+                }
             }
         }
+
+        System.out.println("All done");
     }
 
     private void gameLoop() {
@@ -192,29 +233,45 @@ public class Party implements Runnable {
                             .put("s_move", "Your move")
                             .get());
 
-                    // TODO: Possible null
                     Map<String, Object> response = Server.parser.parse(users[u].receiveMessage(-1));
-                    int action = (int) response.get("i_action");
 
-                    switch (action) {
-                        case 0:
-                            boolean done = manager.makeMove(users[u].getID(),
-                                    (int) response.get("i_fx"), (int) response.get("i_fy"), (int) response.get("i_tx"), (int) response.get("i_ty"));
+                    if (response.containsKey("i_action")) {
+                        int action = (int) response.get("i_action");
 
-                            if (!done) u--;
+                        switch (action) {
+                            case 0:
+                                boolean done = manager.makeMove(users[u].getID(),
+                                        (int) response.get("i_fx"), (int) response.get("i_fy"), (int) response.get("i_tx"), (int) response.get("i_ty"));
 
-                            break;
-                        case 1:
-                            // Skipping a move
-                            break;
+                                if (!done) u--;
+
+                                break;
+                            case 1:
+                                // Skipping a move
+                                break;
+                        }
+                    }
+                } catch (IOException e) {
+                    endParty();
+
+                    System.out.println("Disconnecting " + users[u].getID() + "...");
+                    removeUser(users[u]);
+
+                    try {
+                        users[u].getIn().close();
+                    } catch (IOException e1) {
+                        System.err.println("Unable to close client's socket...");
                     }
 
-                } catch (IOException e) {
-                    // TODO: Someone might have disconnected
-                    e.printStackTrace();
+                    users[u].getOut().close();
                 }
             }
         }
+    }
+
+    private void endParty() {
+        // TODO: End game :(
+        System.err.println("This method has not been implemented yet");
     }
 
     /**
@@ -224,7 +281,6 @@ public class Party implements Runnable {
     public void run() {
         initLoop();
         gameLoop();
-
-        // TODO: Handle party ending
+        endParty();
     }
 }

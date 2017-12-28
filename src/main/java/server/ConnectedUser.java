@@ -29,6 +29,8 @@ class ConnectedUser {
      */
     private int ID;
 
+    private boolean doneSetUp = false;
+
     /**
      * Class constructor
      *
@@ -93,5 +95,13 @@ class ConnectedUser {
      */
     int getID() {
         return ID;
+    }
+
+    public boolean isDoneSetUp() {
+        return doneSetUp;
+    }
+
+    public void setDoneSetUp(boolean doneSetUp) {
+        this.doneSetUp = doneSetUp;
     }
 }
